@@ -12,6 +12,16 @@ public class WeatherManager {
         return true;
     }
 
+    public boolean hasActiveWeather(Class<? extends Weather> type) {
+        for (Weather w : weatherList) {
+            if (type.isInstance(w) && isActive(w)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public void createWeather(String weather) {
         Weather w = null;
 

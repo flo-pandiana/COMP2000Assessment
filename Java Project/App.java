@@ -27,6 +27,7 @@ public class App {
     private JTextField rowsField;
     private JTextField columnsField;
     private JButton startPauseButton;
+    private JButton addFirefighterButton;
     private JButton createMapButton;
     private JButton applyWeatherButton;
     private JLabel statusLabel;
@@ -35,19 +36,13 @@ public class App {
 
     public App() {
         simulation = new ForestFireSimulation(50, 50, new Random());
-
         paintPanel = new PaintPanel(simulation);
-
         frame = new JFrame("Forest Fire Simulation");
-
         rowsField = new JTextField("50", 4);
-
         columnsField = new JTextField("50", 4);
-
         startPauseButton = new JButton("Start");
-
+        addFirefighterButton = new JButton("Add Firefighter");
         statusLabel = new JLabel("Paused");
-
         createMapButton = new JButton("Create New Map");
 
         weatherBox = new JComboBox<String>(
@@ -81,7 +76,6 @@ public class App {
                 });
 
         configureFrame();
-
         configureActions();
     }
 
@@ -100,6 +94,7 @@ public class App {
 
         mapControlPanel.add(createMapButton);
         mapControlPanel.add(startPauseButton);
+        mapControlPanel.add(addFirefighterButton);
 
         JPanel weatherControlPanel = new JPanel(new FlowLayout());
 
@@ -135,6 +130,16 @@ public class App {
                             ActionEvent event) {
 
                         toggleSimulation();
+                    }
+                });
+
+        addFirefighterButton.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(
+                            ActionEvent event) {
+
+                        addRandomFirefighter();
                     }
                 });
 
@@ -175,10 +180,14 @@ public class App {
         paintPanel.addMouseListener(
                 new MouseAdapter() {
                     @Override
-                    public void mouseClicked(
+                    public void mousePressed(
                             MouseEvent event) {
 
-                        igniteClickedCell(event);
+                        if (SwingUtilities.isRightMouseButton(event)) {
+                            placeFirefighter(event);
+                        } else {
+                            igniteClickedCell(event);
+                        }
                     }
                 });
     }
@@ -256,6 +265,38 @@ public class App {
             this.simulation.getWeatherManager().createWeather(selectedWeather);
             this.statusLabel.setText("Weather applied: " + weatherDescription);
         }
+    }
+
+    private void addRandomFirefighter() {
+        Random random = new Random();
+
+        int row = random.nextInt(simulation.getGrid().getRows());
+        int column = random.nextInt(simulation.getGrid().getColumns());
+
+        simulation.addFirefighter(row, column);
+
+        paintPanel.repaint();
+
+        statusLabel.setText("Firefighter placed at row " + row + ", column " + column);
+    }
+
+    private void placeFirefighter(
+            MouseEvent event) {
+
+        Grid.Position position = paintPanel.getGridPositionAt(event.getX(), event.getY());
+
+        if (position == null) {
+            return;
+        }
+
+        int row = position.getRow();
+        int column = position.getColumn();
+
+        simulation.addFirefighter(row, column);
+
+        paintPanel.repaint();
+
+        statusLabel.setText("Firefighter placed at row " + row + ", column " + column);
     }
 
     private void igniteClickedCell(

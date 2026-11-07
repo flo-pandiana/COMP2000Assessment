@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 public class ForestFireSimulation {
@@ -5,6 +8,7 @@ public class ForestFireSimulation {
     private Grid<Float> heatMap;
     private float ignitionThreshold;
     private WeatherManager weatherManager = new WeatherManager();
+    private List<Firefighter> firefighters = new ArrayList<>();
 
     public ForestFireSimulation(int rows, int columns, Random random) {
         if (random == null) {
@@ -61,6 +65,25 @@ public class ForestFireSimulation {
         return this.weatherManager;
     }
 
+    public List<Firefighter> getFirefighters() {
+        return Collections.unmodifiableList(firefighters);
+    }
+
+    public void addFirefighter(int row, int column) {
+        if (!grid.isInBounds(row, column)) {
+            throw new IndexOutOfBoundsException(
+                    "Invalid grid position: (" + row + ", " + column + ")");
+        }
+
+        firefighters.add(new Firefighter(row, column));
+    }
+
+    private void moveFirefighters() {
+        for (Firefighter firefighter : firefighters) {
+            firefighter.act(this);
+        }
+    }
+
     public float getIgnitionThreshold() {
         return ignitionThreshold;
     }
@@ -113,6 +136,7 @@ public class ForestFireSimulation {
         weatherManager.update(this);
         spreadFires();
         applyRiverCooling();
+        moveFirefighters();
         updateCells();
         igniteHeatedCells();
         evolveTerrain();
