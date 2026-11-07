@@ -33,24 +33,24 @@ public class ForestFireSimulation {
                 Terrain terrain;
 
                 if (terrainNumber < 60) {
-                    int age = random.nextInt(11);  //age 0 to 10
-                    int height = 3 + random.nextInt(8); //height 3 to 10
-                    int fuel = 50 + random.nextInt(40); //fuel 50 to 89
-                    int burnRate = 2 + random.nextInt(2); //burnRate 2 to 3
-                    float moisture = 0.3f + random.nextFloat() * 0.3f; //moisture 0.3 to 0.6
+                    int age = random.nextInt(11); // age 0 to 10
+                    int height = 3 + random.nextInt(8); // height 3 to 10
+                    int fuel = 50 + random.nextInt(40); // fuel 50 to 89
+                    int burnRate = 2 + random.nextInt(2); // burnRate 2 to 3
+                    float moisture = 0.3f + random.nextFloat() * 0.3f; // moisture 0.3 to 0.6
 
                     terrain = new Tree(age, fuel, burnRate, moisture, height);
                 } else if (terrainNumber < 90) {
-                    int age = random.nextInt(11); //age 0 to 10
-                    int density = 1 + random.nextInt(4); //height 1 to 4
-                    int fuel = 120 + random.nextInt(60); //fuel 120 to 179
-                    int burnRate = 4 + random.nextInt(2); //burnRate 4 to 5
-                    float moisture = 0.1f + random.nextFloat() * 0.2f; //moisture 0.1 to 0.3
+                    int age = random.nextInt(11); // age 0 to 10
+                    int density = 1 + random.nextInt(4); // height 1 to 4
+                    int fuel = 120 + random.nextInt(60); // fuel 120 to 179
+                    int burnRate = 4 + random.nextInt(2); // burnRate 4 to 5
+                    float moisture = 0.1f + random.nextFloat() * 0.2f; // moisture 0.1 to 0.3
 
                     terrain = new Grass(age, fuel, burnRate, moisture, density);
 
                 } else {
-                    float coolingStrength = 0.1f + random.nextFloat() * 0.2f; //coolingStrength 0.1 to 0.3
+                    float coolingStrength = 0.1f + random.nextFloat() * 0.2f; // coolingStrength 0.1 to 0.3
                     terrain = new River(coolingStrength);
                 }
 
@@ -173,162 +173,176 @@ public class ForestFireSimulation {
     }
 
     public void addWind(int direction, int strength) {
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
-                Cell cell = grid.getCell(row, column);
-                if (!cell.isBurning()) {
-                    continue;
-                }
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                int targetRow = row;
-                int targetColumn = column;
-                int oppositeRow = row;
-                int oppositeColumn = column;
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            int row = entry.getRow();
+            int column = entry.getColumn();
+            Cell cell = entry.getValue();
+            if (!cell.isBurning()) {
+                continue;
+            }
 
-                switch (direction) {
-                    case 1:
-                        targetColumn = column + 1;
-                        oppositeColumn = column - 1;
-                        break;
-                    case 2:
-                        targetRow = row + 1;
-                        oppositeRow = row - 1;
-                        break;
-                    case 3:
-                        targetColumn = column - 1;
-                        oppositeColumn = column + 1;
-                        break;
-                    default:
-                        targetRow = row - 1;
-                        oppositeRow = row + 1;
-                        break;
-                }
+            int targetRow = row;
+            int targetColumn = column;
+            int oppositeRow = row;
+            int oppositeColumn = column;
 
-                if (grid.isInBounds(targetRow, targetColumn)) {
-                    addHeat(targetRow, targetColumn, strength);
-                }
+            switch (direction) {
+                case 1:
+                    targetColumn = column + 1;
+                    oppositeColumn = column - 1;
+                    break;
+                case 2:
+                    targetRow = row + 1;
+                    oppositeRow = row - 1;
+                    break;
+                case 3:
+                    targetColumn = column - 1;
+                    oppositeColumn = column + 1;
+                    break;
+                default:
+                    targetRow = row - 1;
+                    oppositeRow = row + 1;
+                    break;
+            }
 
-                if (grid.isInBounds(oppositeRow, oppositeColumn)) {
-                    removeHeat(oppositeRow, oppositeColumn, 200f);
-                }
+            if (grid.isInBounds(targetRow, targetColumn)) {
+                addHeat(targetRow, targetColumn, strength);
+            }
+
+            if (grid.isInBounds(oppositeRow, oppositeColumn)) {
+                removeHeat(oppositeRow, oppositeColumn, 200f);
             }
         }
     }
 
     private void igniteHeatedCells() {
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
-                if (!hasReachedIgnitionThreshold(row, column)) {
-                    continue;
-                }
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                Cell cell = grid.getCell(row, column);
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            int row = entry.getRow();
+            int column = entry.getColumn();
+            if (!hasReachedIgnitionThreshold(row, column)) {
+                continue;
+            }
 
-                if (!cell.canBurn()) {
-                    heatMap.setCell(row, column, 0f);
-                    continue;
-                }
+            Cell cell = entry.getValue();
 
-                if (cell.getTerrain().isBurnedOut()) {
-                    heatMap.setCell(row, column, 0f);
-                    continue;
-                }
+            if (!cell.canBurn()) {
+                heatMap.setCell(row, column, 0f);
+                continue;
+            }
 
-                if (cell.isBurning()) {
-                    continue;
-                }
+            if (cell.getTerrain().isBurnedOut()) {
+                heatMap.setCell(row, column, 0f);
+                continue;
+            }
 
-                int intensity = (int) Math.ceil(ignitionThreshold / 10f);
+            if (cell.isBurning()) {
+                continue;
+            }
 
-                System.out.println("AUTO IGNITE at row=" + row + " column=" + column);
-                cell.ignite(intensity);
+            int intensity = (int) Math.ceil(ignitionThreshold / 10f);
 
-                if (cell.isBurning()) {
-                    removeHeat(row, column, ignitionThreshold);
-                }
+            System.out.println("AUTO IGNITE at row=" + row + " column=" + column);
+            cell.ignite(intensity);
+
+            if (cell.isBurning()) {
+                removeHeat(row, column, ignitionThreshold);
             }
         }
     }
 
     private void updateCells() {
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                Cell cell = grid.getCell(row, column);
-                cell.updateBurningState();
-            }
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+
+            Cell cell = entry.getValue();
+            cell.updateBurningState();
         }
     }
 
     private void spreadFires() {
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                Cell sourceCell = grid.getCell(row, column);
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            int row = entry.getRow();
+            int column = entry.getColumn();
 
-                if (!sourceCell.isBurning()) {
-                    continue;
+            Cell sourceCell = entry.getValue();
+
+            if (!sourceCell.isBurning()) {
+                continue;
+            }
+
+            try {
+                int fireIntensity = sourceCell.getFire().getIntensity();
+
+                float spreadHeat = fireIntensity;
+                Terrain terrain = sourceCell.getTerrain();
+
+                if (terrain instanceof Vegetation) {
+                    Vegetation vegetation = (Vegetation) terrain;
+
+                    spreadHeat = vegetation.calculateSpreadHeat(fireIntensity);
                 }
 
-                try {
-                    int fireIntensity = sourceCell.getFire().getIntensity();
+                for (Grid.Position neighbour : spreadPattern.getSpreadPositions(grid, row, column)) {
 
-                    float spreadHeat = fireIntensity;
-                    Terrain terrain = sourceCell.getTerrain();
-
-                    if (terrain instanceof Vegetation) {
-                        Vegetation vegetation = (Vegetation) terrain;
-
-                        spreadHeat = vegetation.calculateSpreadHeat(fireIntensity);
-                    }
-
-                    for (Grid.Position neighbour : spreadPattern.getSpreadPositions(grid, row, column)) {
-
-                        addHeat(neighbour.getRow(), neighbour.getColumn(), spreadHeat);
-                    }
-                } catch (IllegalArgumentException e) {
-                    System.out.println("Can't burn on cell (" + row + ", " + column + ")");
+                    addHeat(neighbour.getRow(), neighbour.getColumn(), spreadHeat);
                 }
+            } catch (IllegalArgumentException e) {
+                System.out.println("Can't burn on cell (" + row + ", " + column + ")");
             }
         }
     }
 
     private void applyRiverCooling() {
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                Cell cell = grid.getCell(row, column);
-                Terrain terrain = cell.getTerrain();
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            int row = entry.getRow();
+            int column = entry.getColumn();
 
-                if (!(terrain instanceof River)) {
-                    continue;
-                }
+            Cell cell = entry.getValue();
+            Terrain terrain = cell.getTerrain();
 
-                River river = (River) terrain;
-                float cooling = river.getCoolingStrength();
+            if (!(terrain instanceof River)) {
+                continue;
+            }
 
-                removeHeat(row, column, cooling);
+            River river = (River) terrain;
+            float cooling = river.getCoolingStrength();
 
-                for (Grid.Position neighbour : grid.neighbourPositions(row, column)) {
+            removeHeat(row, column, cooling);
 
-                    removeHeat(neighbour.getRow(), neighbour.getColumn(), cooling / 2.0f);
-                }
+            for (Grid.Position neighbour : grid.neighbourPositions(row, column)) {
+
+                removeHeat(neighbour.getRow(), neighbour.getColumn(), cooling / 2.0f);
             }
         }
     }
 
     private void evolveTerrain() {
-        for (int row = 0; row < this.grid.getRows(); row++) {
-            for (int column = 0; column < this.grid.getColumns(); column++) {
+        GridIterator<Grid.Entry<Cell>> iterator = this.grid.createIterator();
 
-                Cell cell = grid.getCell(row, column);
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
 
-                if (cell != null
-                        && !cell.isBurning()
-                        && cell.getTerrain() != null) {
+            Cell cell = entry.getValue();
 
-                    cell.getTerrain().update();
-                }
+            if (cell != null
+                    && !cell.isBurning()
+                    && cell.getTerrain() != null) {
+
+                cell.getTerrain().update();
             }
         }
     }

@@ -26,21 +26,24 @@ public class Firefighter {
         int targetColumn = -1;
         int bestDistance = Integer.MAX_VALUE;
 
-        for (int r = 0; r < grid.getRows(); r++) {
-            for (int c = 0; c < grid.getColumns(); c++) {
-                Cell cell = grid.getCell(r, c);
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                if (cell == null || !cell.isBurning()) {
-                    continue;
-                }
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            Cell cell = entry.getValue();
 
-                int distance = Math.max(Math.abs(r - row), Math.abs(c - column));
+            if (cell == null || !cell.isBurning()) {
+                continue;
+            }
 
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    targetRow = r;
-                    targetColumn = c;
-                }
+            int r = entry.getRow();
+            int c = entry.getColumn();
+            int distance = Math.max(Math.abs(r - row), Math.abs(c - column));
+
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                targetRow = r;
+                targetColumn = c;
             }
         }
 

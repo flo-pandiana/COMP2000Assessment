@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 public class Grid<T> {
     private int rows;
@@ -113,6 +114,62 @@ public class Grid<T> {
             }
         }
         return positions;
+    }
+
+    public GridIterator<Entry<T>> createIterator() {
+        return new RowByRowIterator();
+    }
+
+    private class RowByRowIterator implements GridIterator<Entry<T>> {
+        private int nextRow = 0;
+        private int nextColumn = 0;
+
+        @Override
+        public boolean hasNext() {
+            return nextRow < rows;
+        }
+
+        @Override
+        public Entry<T> next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            Entry<T> entry = new Entry<T>(nextRow, nextColumn, getCell(nextRow, nextColumn));
+
+            nextColumn++;
+
+            if (nextColumn >= columns) {
+                nextColumn = 0;
+                nextRow++;
+            }
+
+            return entry;
+        }
+    }
+
+    public static class Entry<T> {
+        private int row;
+        private int column;
+        private T value;
+
+        public Entry(int row, int column, T value) {
+            this.row = row;
+            this.column = column;
+            this.value = value;
+        }
+
+        public int getRow() {
+            return row;
+        }
+
+        public int getColumn() {
+            return column;
+        }
+
+        public T getValue() {
+            return value;
+        }
     }
 
     public static class Position {

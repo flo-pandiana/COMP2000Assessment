@@ -37,15 +37,16 @@ public class StatisticsPanel extends JPanel implements SimulationObserver {
         int burning = 0;
         int burnedOut = 0;
 
-        for (int row = 0; row < grid.getRows(); row++) {
-            for (int column = 0; column < grid.getColumns(); column++) {
-                Cell cell = grid.getCell(row, column);
+        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 
-                if (cell.isBurning()) {
-                    burning++;
-                } else if (cell.isPermanentlyBurnedOut()) {
-                    burnedOut++;
-                }
+        while (iterator.hasNext()) {
+            Grid.Entry<Cell> entry = iterator.next();
+            Cell cell = entry.getValue();
+
+            if (cell.isBurning()) {
+                burning++;
+            } else if (cell.isPermanentlyBurnedOut()) {
+                burnedOut++;
             }
         }
 
