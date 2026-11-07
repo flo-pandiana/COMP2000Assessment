@@ -8,6 +8,7 @@ public class ForestFireSimulation {
     private Grid<Float> heatMap;
     private float ignitionThreshold;
     private WeatherManager weatherManager = new WeatherManager();
+    private SpreadPatternStrategy spreadPattern = new EightSpread();
     private List<Firefighter> firefighters = new ArrayList<>();
 
     public ForestFireSimulation(int rows, int columns, Random random) {
@@ -82,6 +83,14 @@ public class ForestFireSimulation {
         for (Firefighter firefighter : firefighters) {
             firefighter.act(this);
         }
+    }
+
+    public void setSpreadPattern(SpreadPatternStrategy spreadPattern) {
+        if (spreadPattern == null) {
+            throw new IllegalArgumentException("Spread pattern cannot be null");
+        }
+
+        this.spreadPattern = spreadPattern;
     }
 
     public float getIgnitionThreshold() {
@@ -252,7 +261,7 @@ public class ForestFireSimulation {
                         spreadHeat = vegetation.calculateSpreadHeat(fireIntensity);
                     }
 
-                    for (Grid.Position neighbour : this.grid.neighbourPositions(row, column)) {
+                    for (Grid.Position neighbour : spreadPattern.getSpreadPositions(grid, row, column)) {
 
                         addHeat(neighbour.getRow(), neighbour.getColumn(), spreadHeat);
                     }

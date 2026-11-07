@@ -33,6 +33,7 @@ public class App {
     private JLabel statusLabel;
     private JComboBox<String> weatherBox;
     private JComboBox<String> windDirectionBox;
+    private JComboBox<String> spreadBox;
 
     public App() {
         simulation = new ForestFireSimulation(50, 50, new Random());
@@ -62,6 +63,12 @@ public class App {
                         "West"
                 });
         windDirectionBox.setEnabled(false);
+
+        spreadBox = new JComboBox<String>(
+                new String[] {
+                        "8 Neighbours",
+                        "4 Neighbours"
+                });
 
         applyWeatherButton = new JButton("Apply Weather");
 
@@ -103,6 +110,8 @@ public class App {
         weatherControlPanel.add(new JLabel("Direction:"));
         weatherControlPanel.add(windDirectionBox);
         weatherControlPanel.add(applyWeatherButton);
+        weatherControlPanel.add(new JLabel("Spread:"));
+        weatherControlPanel.add(spreadBox);
 
         JPanel controlPanel = new JPanel(new GridLayout(2, 1));
         controlPanel.add(mapControlPanel);
@@ -167,6 +176,16 @@ public class App {
                     }
                 });
 
+        spreadBox.addActionListener(
+                new ActionListener() {
+                    @Override
+                    public void actionPerformed(
+                            ActionEvent event) {
+
+                        applySpreadPattern();
+                    }
+                });
+
         applyWeatherButton.addActionListener(
                 new ActionListener() {
                     @Override
@@ -225,6 +244,8 @@ public class App {
 
             paintPanel.setSimulation(newSimulation);
 
+            applySpreadPattern();
+
             weatherBox.setSelectedItem("None");
 
             frame.pack();
@@ -251,6 +272,18 @@ public class App {
                 timer.start();
             }
         }
+    }
+
+    private void applySpreadPattern() {
+        String selectedPattern = (String) spreadBox.getSelectedItem();
+
+        if ("4 Neighbours".equals(selectedPattern)) {
+            simulation.setSpreadPattern(new FourSpread());
+        } else {
+            simulation.setSpreadPattern(new EightSpread());
+        }
+
+        statusLabel.setText("Fire spread pattern: " + selectedPattern);
     }
 
     private void applySelectedWeather() {
