@@ -4,6 +4,8 @@ public class Grass extends Vegetation {
     public Grass(int age, int fuel, int burnRate, float moisture, int density) {
         super(age, fuel, burnRate, moisture);
         this.density = density;
+
+        heatCalculator = new HeatDecorators.DensityBonus(heatCalculator, this);
     }
 
     public int getDensity() {
@@ -12,11 +14,5 @@ public class Grass extends Vegetation {
 
     public void setDensity(int density) {
         this.density = density;
-    }
-
-    @Override
-    public float calculateSpreadHeat(int fireIntensity) {
-        // Calls base calculation from Vegetation and factors in density
-        return super.calculateSpreadHeat(fireIntensity) + this.density;
     }
 }
