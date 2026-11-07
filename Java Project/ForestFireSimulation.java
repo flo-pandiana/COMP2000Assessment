@@ -10,6 +10,7 @@ public class ForestFireSimulation {
     private WeatherManager weatherManager = new WeatherManager();
     private SpreadPatternStrategy spreadPattern = new EightSpread();
     private List<Firefighter> firefighters = new ArrayList<>();
+    private List<SimulationObserver> observers = new ArrayList<>();
 
     public ForestFireSimulation(int rows, int columns, Random random) {
         if (random == null) {
@@ -66,6 +67,20 @@ public class ForestFireSimulation {
         return this.weatherManager;
     }
 
+    public void addObserver(SimulationObserver observer) {
+        observers.add(observer);
+    }
+
+    public void removeObserver(SimulationObserver observer) {
+        observers.remove(observer);
+    }
+
+    private void notifyObservers(String message) {
+        for (SimulationObserver observer : observers) {
+            observer.onSimulationChanged(message);
+        }
+    }
+
     public List<Firefighter> getFirefighters() {
         return Collections.unmodifiableList(firefighters);
     }
@@ -77,6 +92,8 @@ public class ForestFireSimulation {
         }
 
         firefighters.add(new Firefighter(row, column));
+
+        notifyObservers("Firefighter placed at row " + row + ", column " + column);
     }
 
     private void moveFirefighters() {
@@ -112,6 +129,8 @@ public class ForestFireSimulation {
 
         System.out.println("MANUAL IGNITE at row=" + row + " column=" + column);
         cell.ignite(intensity);
+
+        notifyObservers("Fire started at row " + row + ", column " + column);
     }
 
     public void addHeat(int row, int column, float amount) {
@@ -149,6 +168,8 @@ public class ForestFireSimulation {
         updateCells();
         igniteHeatedCells();
         evolveTerrain();
+
+        notifyObservers(null);
     }
 
     public void addWind(int direction, int strength) {

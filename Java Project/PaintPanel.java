@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import javax.swing.JPanel;
 
 //@SuppressWarnings({"serial", "this-escape"})
-public class PaintPanel extends JPanel {
+public class PaintPanel extends JPanel implements SimulationObserver {
     private ForestFireSimulation simulation;
     private int cellSize;
 
@@ -27,6 +27,11 @@ public class PaintPanel extends JPanel {
         setBackground(Color.WHITE);
         setToolTipText(
                 "Left-click to start a fire, right-click to place a firefighter");
+    }
+
+    @Override
+    public void onSimulationChanged(String message) {
+        repaint();
     }
 
     public void setSimulation(ForestFireSimulation simulation) {

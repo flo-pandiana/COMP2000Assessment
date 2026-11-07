@@ -31,6 +31,7 @@ public class App {
     private JButton createMapButton;
     private JButton applyWeatherButton;
     private JLabel statusLabel;
+    private StatisticsPanel statisticsPanel;
     private JComboBox<String> weatherBox;
     private JComboBox<String> windDirectionBox;
     private JComboBox<String> spreadBox;
@@ -38,6 +39,7 @@ public class App {
     public App() {
         simulation = new ForestFireSimulation(50, 50, new Random());
         paintPanel = new PaintPanel(simulation);
+        statisticsPanel = new StatisticsPanel(simulation);
         frame = new JFrame("Forest Fire Simulation");
         rowsField = new JTextField("50", 4);
         columnsField = new JTextField("50", 4);
@@ -78,12 +80,27 @@ public class App {
                     @Override
                     public void actionPerformed(ActionEvent event) {
                         simulation.update();
-                        paintPanel.repaint();
                     }
                 });
 
         configureFrame();
         configureActions();
+        attachObservers(simulation);
+    }
+
+    // Registers everything that needs to react to the simulation changing
+    private void attachObservers(ForestFireSimulation target) {
+        target.addObserver(paintPanel);
+        target.addObserver(statisticsPanel);
+        target.addObserver(
+                new SimulationObserver() {
+                    @Override
+                    public void onSimulationChanged(String message) {
+                        if (message != null) {
+                            statusLabel.setText(message);
+                        }
+                    }
+                });
     }
 
     private void configureFrame() {
@@ -125,7 +142,11 @@ public class App {
 
         frame.add(scrollPane, BorderLayout.CENTER);
 
-        frame.add(statusLabel, BorderLayout.SOUTH);
+        JPanel bottomPanel = new JPanel(new GridLayout(2, 1));
+        bottomPanel.add(statusLabel);
+        bottomPanel.add(statisticsPanel);
+
+        frame.add(bottomPanel, BorderLayout.SOUTH);
 
         frame.pack();
         frame.setLocationRelativeTo(null);
@@ -243,6 +264,8 @@ public class App {
             simulation = newSimulation;
 
             paintPanel.setSimulation(newSimulation);
+            statisticsPanel.setSimulation(newSimulation);
+            attachObservers(newSimulation);
 
             applySpreadPattern();
 
@@ -307,10 +330,6 @@ public class App {
         int column = random.nextInt(simulation.getGrid().getColumns());
 
         simulation.addFirefighter(row, column);
-
-        paintPanel.repaint();
-
-        statusLabel.setText("Firefighter placed at row " + row + ", column " + column);
     }
 
     private void placeFirefighter(
@@ -326,10 +345,6 @@ public class App {
         int column = position.getColumn();
 
         simulation.addFirefighter(row, column);
-
-        paintPanel.repaint();
-
-        statusLabel.setText("Firefighter placed at row " + row + ", column " + column);
     }
 
     private void igniteClickedCell(
@@ -368,10 +383,6 @@ public class App {
                 row,
                 column,
                 10);
-
-        paintPanel.repaint();
-
-        statusLabel.setText("Fire started at row " + row + ", column " + column);
     }
 
     public static void main(String[] args) {
