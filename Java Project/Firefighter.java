@@ -21,7 +21,6 @@ public class Firefighter {
     public void act(ForestFireSimulation simulation) {
         Grid<Cell> grid = simulation.getGrid();
 
-        // Find the nearest burning cell (Chebyshev distance)
         int targetRow = -1;
         int targetColumn = -1;
         int bestDistance = Integer.MAX_VALUE;
