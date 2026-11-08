@@ -1,12 +1,15 @@
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.FlowLayout;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collector;
 
 // Shows live counts for the simulation. It updates itself whenever the simulation notifies it.
 public class StatisticsPanel extends JPanel implements SimulationObserver {
     private ForestFireSimulation simulation;
     private JLabel statsLabel;
+    private final ForkJoinPool pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
     public StatisticsPanel(ForestFireSimulation simulation) {
         super(new FlowLayout(FlowLayout.LEFT));
@@ -33,16 +36,32 @@ public class StatisticsPanel extends JPanel implements SimulationObserver {
     }
 
     private void refresh() {
-        int[] counts = simulation.getGrid()
-                .stream()
-                .parallel()
-                .map(entry -> entry.getValue())
-                .collect(cellCounter());
+        int[] counts = countCells();
+
+        if (counts == null) {
+            return;
+        }
 
         statsLabel.setText("Burning: " + counts[0]
                 + "   |   Burned out: " + counts[1]
                 + "   |   Firefighters: " + simulation.getFirefighters().size()
                 + "   |   Weather: " + simulation.getWeatherManager().describeActiveWeather());
+    }
+
+    private int[] countCells() {
+        Grid<Cell> grid = simulation.getGrid();
+
+        try {
+            return pool.submit(() -> grid.stream()
+                    .parallel()
+                    .map(entry -> entry.getValue())
+                    .collect(cellCounter())).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Counting cells failed", e.getCause());
+        }
     }
 
     private Collector<Cell, int[], int[]> cellCounter() {
