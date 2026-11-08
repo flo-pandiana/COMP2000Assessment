@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public class WeatherManager {
     private ArrayList<Weather> weatherList = new ArrayList<>();
@@ -13,13 +14,16 @@ public class WeatherManager {
     }
 
     public boolean hasActiveWeather(Class<? extends Weather> type) {
-        for (Weather w : weatherList) {
-            if (type.isInstance(w) && isActive(w)) {
-                return true;
-            }
-        }
+        return weatherList.stream().anyMatch(w -> type.isInstance(w) && isActive(w));
+    }
 
-        return false;
+    public String describeActiveWeather() {
+        String description = weatherList.stream()
+                .filter(this::isActive)
+                .map(w -> w.getClass().getSimpleName() + " (" + w.getDuration() + ")")
+                .collect(Collectors.joining(", "));
+
+        return description.isEmpty() ? "None" : description;
     }
 
     public void createWeather(String weather) {

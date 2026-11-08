@@ -25,16 +25,10 @@ public class Firefighter {
         int targetColumn = -1;
         int bestDistance = Integer.MAX_VALUE;
 
-        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
+        GridIterator<Grid.Entry<Cell>> burningCells = grid.createIterator(cell -> cell != null && cell.isBurning());
 
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-            Cell cell = entry.getValue();
-
-            if (cell == null || !cell.isBurning()) {
-                continue;
-            }
-
+        while (burningCells.hasNext()) {
+            Grid.Entry<Cell> entry = burningCells.next();
             int r = entry.getRow();
             int c = entry.getColumn();
             int distance = Math.max(Math.abs(r - row), Math.abs(c - column));

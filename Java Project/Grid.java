@@ -1,6 +1,12 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class Grid<T> {
     private int rows;
@@ -120,6 +126,29 @@ public class Grid<T> {
         return new RowByRowIterator();
     }
 
+    public GridIterator<Entry<T>> createIterator(Predicate<T> filter) {
+        return new FilteredIterator(filter);
+    }
+
+    public Stream<Entry<T>> stream() {
+        GridIterator<Entry<T>> source = createIterator();
+
+        Iterator<Entry<T>> adapter = new Iterator<Entry<T>>() {
+            @Override
+            public boolean hasNext() {
+                return source.hasNext();
+            }
+
+            @Override
+            public Entry<T> next() {
+                return source.next();
+            }
+        };
+
+        return StreamSupport.stream(
+                Spliterators.spliteratorUnknownSize(adapter, Spliterator.ORDERED), false);
+    }
+
     private class RowByRowIterator implements GridIterator<Entry<T>> {
         private int nextRow = 0;
         private int nextColumn = 0;
@@ -145,6 +174,41 @@ public class Grid<T> {
             }
 
             return entry;
+        }
+    }
+
+    private class FilteredIterator implements GridIterator<Entry<T>> {
+        private final GridIterator<Entry<T>> source = new RowByRowIterator();
+        private final Predicate<T> filter;
+        private Entry<T> upcoming;
+
+        FilteredIterator(Predicate<T> filter) {
+            this.filter = filter;
+        }
+
+        @Override
+        public boolean hasNext() {
+            while (upcoming == null && source.hasNext()) {
+                Entry<T> candidate = source.next();
+
+                if (filter.test(candidate.getValue())) {
+                    upcoming = candidate;
+                }
+            }
+
+            return upcoming != null;
+        }
+
+        @Override
+        public Entry<T> next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            Entry<T> result = upcoming;
+            upcoming = null;
+
+            return result;
         }
     }
 

@@ -312,14 +312,11 @@ public class App {
     private void applySelectedWeather() {
         String selectedWeather = (String) this.weatherBox.getSelectedItem();
         String selectedDirection = (String) this.windDirectionBox.getSelectedItem();
-        String weatherDescription = selectedWeather;
 
         if ("Wind".equals(selectedWeather)) {
-            this.simulation.getWeatherManager().createWeather(selectedWeather, selectedDirection);
-            this.statusLabel.setText("Weather applied: Wind going " + selectedDirection);
+            this.simulation.addWeather(selectedWeather, selectedDirection);
         } else {
-            this.simulation.getWeatherManager().createWeather(selectedWeather);
-            this.statusLabel.setText("Weather applied: " + weatherDescription);
+            this.simulation.addWeather(selectedWeather);
         }
     }
 

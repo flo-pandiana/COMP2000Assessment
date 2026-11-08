@@ -67,6 +67,18 @@ public class ForestFireSimulation {
         return this.weatherManager;
     }
 
+    public void addWeather(String weather) {
+        weatherManager.createWeather(weather);
+
+        notifyObservers("Weather applied: " + weather);
+    }
+
+    public void addWeather(String weather, String direction) {
+        weatherManager.createWeather(weather, direction);
+
+        notifyObservers("Weather applied: " + weather + " going " + direction);
+    }
+
     public void addObserver(SimulationObserver observer) {
         observers.add(observer);
     }
@@ -257,14 +269,9 @@ public class ForestFireSimulation {
     }
 
     private void updateCells() {
-        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
-
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-
-            Cell cell = entry.getValue();
-            cell.updateBurningState();
-        }
+        grid.stream()
+                .map(entry -> entry.getValue())
+                .forEach(Cell::updateBurningState);
     }
 
     private void spreadFires() {
@@ -304,46 +311,25 @@ public class ForestFireSimulation {
     }
 
     private void applyRiverCooling() {
-        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
+        grid.stream()
+                .filter(entry -> entry.getValue().getTerrain() instanceof River)
+                .forEach(entry -> {
+                    int row = entry.getRow();
+                    int column = entry.getColumn();
+                    float cooling = ((River) entry.getValue().getTerrain()).getCoolingStrength();
 
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-            int row = entry.getRow();
-            int column = entry.getColumn();
+                    removeHeat(row, column, cooling);
 
-            Cell cell = entry.getValue();
-            Terrain terrain = cell.getTerrain();
-
-            if (!(terrain instanceof River)) {
-                continue;
-            }
-
-            River river = (River) terrain;
-            float cooling = river.getCoolingStrength();
-
-            removeHeat(row, column, cooling);
-
-            for (Grid.Position neighbour : grid.neighbourPositions(row, column)) {
-
-                removeHeat(neighbour.getRow(), neighbour.getColumn(), cooling / 2.0f);
-            }
-        }
+                    for (Grid.Position neighbour : grid.neighbourPositions(row, column)) {
+                        removeHeat(neighbour.getRow(), neighbour.getColumn(), cooling / 2.0f);
+                    }
+                });
     }
 
     private void evolveTerrain() {
-        GridIterator<Grid.Entry<Cell>> iterator = this.grid.createIterator();
-
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-
-            Cell cell = entry.getValue();
-
-            if (cell != null
-                    && !cell.isBurning()
-                    && cell.getTerrain() != null) {
-
-                cell.getTerrain().update();
-            }
-        }
+        grid.stream()
+                .map(entry -> entry.getValue())
+                .filter(cell -> cell != null && !cell.isBurning() && cell.getTerrain() != null)
+                .forEach(cell -> cell.getTerrain().update());
     }
 }

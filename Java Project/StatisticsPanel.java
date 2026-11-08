@@ -1,6 +1,7 @@
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.FlowLayout;
+import java.util.stream.Collector;
 
 // Shows live counts for the simulation. It updates itself whenever the simulation notifies it.
 public class StatisticsPanel extends JPanel implements SimulationObserver {
@@ -32,26 +33,32 @@ public class StatisticsPanel extends JPanel implements SimulationObserver {
     }
 
     private void refresh() {
-        Grid<Cell> grid = simulation.getGrid();
+        int[] counts = simulation.getGrid()
+                .stream()
+                .parallel()
+                .map(entry -> entry.getValue())
+                .collect(cellCounter());
 
-        int burning = 0;
-        int burnedOut = 0;
+        statsLabel.setText("Burning: " + counts[0]
+                + "   |   Burned out: " + counts[1]
+                + "   |   Firefighters: " + simulation.getFirefighters().size()
+                + "   |   Weather: " + simulation.getWeatherManager().describeActiveWeather());
+    }
 
-        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
-
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-            Cell cell = entry.getValue();
-
-            if (cell.isBurning()) {
-                burning++;
-            } else if (cell.isPermanentlyBurnedOut()) {
-                burnedOut++;
-            }
-        }
-
-        statsLabel.setText("Burning: " + burning
-                + "   |   Burned out: " + burnedOut
-                + "   |   Firefighters: " + simulation.getFirefighters().size());
+    private Collector<Cell, int[], int[]> cellCounter() {
+        return Collector.of(
+                () -> new int[2],
+                (partial, cell) -> {
+                    if (cell.isBurning()) {
+                        partial[0]++;
+                    } else if (cell.isPermanentlyBurnedOut()) {
+                        partial[1]++;
+                    }
+                },
+                (left, right) -> {
+                    left[0] += right[0];
+                    left[1] += right[1];
+                    return left;
+                });
     }
 }

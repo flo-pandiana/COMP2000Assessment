@@ -95,16 +95,7 @@ public class PaintPanel extends JPanel implements SimulationObserver {
     }
 
     private void drawGrid(Graphics graphics, Grid<Cell> grid) {
-        GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
-
-        while (iterator.hasNext()) {
-            Grid.Entry<Cell> entry = iterator.next();
-            int row = entry.getRow();
-            int column = entry.getColumn();
-            Cell cell = entry.getValue();
-
-            drawCell(graphics, cell, row, column);
-        }
+        grid.stream().forEach(entry -> drawCell(graphics, entry.getValue(), entry.getRow(), entry.getColumn()));
     }
 
     private void drawCell(Graphics graphics, Cell cell, int row, int column) {
