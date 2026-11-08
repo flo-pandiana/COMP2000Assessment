@@ -184,6 +184,55 @@ public class ForestFireSimulation {
         notifyObservers(null);
     }
 
+    public void addRain(int strength) {
+        grid.stream().forEach(entry -> {
+            Cell cell = entry.getValue();
+
+            if (cell.isBurning() && Math.random() < 0.3) {
+                cell.extinguish();
+                removeHeat(entry.getRow(), entry.getColumn(), strength);
+            } else if (!cell.isBurning()) {
+                removeHeat(entry.getRow(), entry.getColumn(), strength / 2f);
+            }
+        });
+    }
+
+    public void addHeatwave(int strength) {
+        grid.stream()
+                .filter(entry -> entry.getValue().isBurning())
+                .forEach(entry -> {
+                    for (int rowOffset = -2; rowOffset <= 2; rowOffset++) {
+                        for (int columnOffset = -2; columnOffset <= 2; columnOffset++) {
+                            int targetRow = entry.getRow() + rowOffset;
+                            int targetColumn = entry.getColumn() + columnOffset;
+
+                            if (!grid.isInBounds(targetRow, targetColumn)) {
+                                continue;
+                            }
+
+                            Cell target = grid.getCell(targetRow, targetColumn);
+
+                            if (target.canBurn() && !target.isBurning() && Math.random() < 0.03) {
+                                igniteCell(targetRow, targetColumn, strength);
+                            }
+                        }
+                    }
+                });
+    }
+
+    public void addLightning(int strength, int strikesPerUpdate) {
+        for (int i = 0; i < strikesPerUpdate; i++) {
+            int row = (int) (Math.random() * grid.getRows());
+            int column = (int) (Math.random() * grid.getColumns());
+
+            Cell cell = grid.getCell(row, column);
+
+            if (cell.canBurn() && !cell.isBurning()) {
+                igniteCell(row, column, strength);
+            }
+        }
+    }
+
     public void addWind(int direction, int strength) {
         GridIterator<Grid.Entry<Cell>> iterator = grid.createIterator();
 

@@ -1,34 +1,33 @@
-public abstract class Weather{
+import java.util.function.Consumer;
 
-	protected int strength;
-	protected int duration;
-	protected int[][] location;
+public class Weather {
+    private final String name;
+    private int duration;
+    private final Consumer<ForestFireSimulation> effect;
 
-	protected Weather(int strength, int duration, int[][] location){
-		if(strength < 0 || duration < 0){
-			throw new IllegalArgumentException("Strength or Duration cannot be negative");
-		}
-		this.strength = strength;
-		this.duration = duration;
-		this.location = location;
-	}
+    public Weather(String name, int duration, Consumer<ForestFireSimulation> effect) {
+        if (duration < 0) {
+            throw new IllegalArgumentException("Duration cannot be negative");
+        }
 
-	public int getStrength(){
-		return strength;
-	}
+        this.name = name;
+        this.duration = duration;
+        this.effect = effect;
+    }
 
-	public int getDuration(){
-		return duration;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public int[][] getLocation(){
-		return location;
-	}
+    public int getDuration() {
+        return duration;
+    }
 
-	public void decrementDuration(){
-		duration--;
-	}
+    public void decrementDuration() {
+        duration--;
+    }
 
-	//Public so subclasses can override. Abstract so subclasses have to implement their own specific behaviour.
-	public abstract void affectSimulation(ForestFireSimulation simulation);
+    public void affectSimulation(ForestFireSimulation simulation) {
+        effect.accept(simulation);
+    }
 }

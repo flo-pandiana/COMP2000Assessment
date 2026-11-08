@@ -13,14 +13,14 @@ public class WeatherManager {
         return true;
     }
 
-    public boolean hasActiveWeather(Class<? extends Weather> type) {
-        return weatherList.stream().anyMatch(w -> type.isInstance(w) && isActive(w));
+    public boolean hasActiveWeather(String name) {
+        return weatherList.stream().anyMatch(w -> w.getName().equals(name) && isActive(w));
     }
 
     public String describeActiveWeather() {
         String description = weatherList.stream()
                 .filter(this::isActive)
-                .map(w -> w.getClass().getSimpleName() + " (" + w.getDuration() + ")")
+                .map(w -> w.getName() + " (" + w.getDuration() + ")")
                 .collect(Collectors.joining(", "));
 
         return description.isEmpty() ? "None" : description;
@@ -31,13 +31,13 @@ public class WeatherManager {
 
         switch (weather) {
             case "Rain":
-                w = new Rain(8, 20, null);
+                w = new Weather("Rain", 20, simulation -> simulation.addRain(8));
                 break;
             case "Heatwave":
-                w = new Heatwave(2, 9, null);
+                w = new Weather("Heatwave", 9, simulation -> simulation.addHeatwave(2));
                 break;
             case "Lightning":
-                w = new Lightning(10, 3, null, 3);
+                w = new Weather("Lightning", 3, simulation -> simulation.addLightning(10, 3));
                 break;
             default:
                 break;
@@ -49,7 +49,6 @@ public class WeatherManager {
     }
 
     public void createWeather(String weather, String selectedDirection) {
-        Weather w = null;
         int direction = 0;
 
         switch (selectedDirection) {
@@ -66,11 +65,9 @@ public class WeatherManager {
                 break;
         }
 
-        w = new Wind(20, 25, null, direction);
+        int windDirection = direction;
 
-        if (w != null) {
-            weatherList.add(w);
-        }
+        weatherList.add(new Weather("Wind", 25, simulation -> simulation.addWind(windDirection, 20)));
     }
 
     public void advanceDecrement(Weather w) {

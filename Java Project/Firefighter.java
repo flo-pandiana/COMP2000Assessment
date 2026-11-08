@@ -48,9 +48,9 @@ public class Firefighter {
         WeatherManager weatherManager = simulation.getWeatherManager();
         int speed = NORMAL_SPEED;
 
-        if (weatherManager.hasActiveWeather(Heatwave.class)) {
+        if (weatherManager.hasActiveWeather("Heatwave")) {
             speed = 0;
-        } else if (weatherManager.hasActiveWeather(Rain.class)) {
+        } else if (weatherManager.hasActiveWeather("Rain")) {
             speed = 2;
         }
 
