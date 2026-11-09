@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import javax.swing.JPanel;
 
 //@SuppressWarnings({"serial", "this-escape"})
@@ -95,7 +96,21 @@ public class PaintPanel extends JPanel implements SimulationObserver {
     }
 
     private void drawGrid(Graphics graphics, Grid<Cell> grid) {
-        grid.stream().forEach(entry -> drawCell(graphics, entry.getValue(), entry.getRow(), entry.getColumn()));
+        Rectangle visible = graphics.getClipBounds();
+
+        if (visible == null) {
+            visible = new Rectangle(0, 0, getWidth(), getHeight());
+        }
+
+        int firstColumn = Math.max(0, visible.x / this.cellSize);
+        int lastColumn = Math.min(grid.getColumns() - 1, (visible.x + visible.width) / this.cellSize);
+        int firstRow = Math.max(0, visible.y / this.cellSize);
+        int lastRow = Math.min(grid.getRows() - 1, (visible.y + visible.height) / this.cellSize);
+
+        grid.stream()
+                .filter(entry -> entry.getRow() >= firstRow && entry.getRow() <= lastRow
+                        && entry.getColumn() >= firstColumn && entry.getColumn() <= lastColumn)
+                .forEach(entry -> drawCell(graphics, entry.getValue(), entry.getRow(), entry.getColumn()));
     }
 
     private void drawCell(Graphics graphics, Cell cell, int row, int column) {

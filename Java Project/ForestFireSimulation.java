@@ -2,8 +2,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 public class ForestFireSimulation {
+    private static final ForkJoinPool POOL = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+
     private Grid<Cell> grid;
     private Grid<Float> heatMap;
     private float ignitionThreshold;
@@ -318,9 +322,20 @@ public class ForestFireSimulation {
     }
 
     private void updateCells() {
-        grid.stream()
+        runInPool(() -> grid.stream()
+                .parallel()
                 .map(entry -> entry.getValue())
-                .forEach(Cell::updateBurningState);
+                .forEach(Cell::updateBurningState));
+    }
+
+    private void runInPool(Runnable task) {
+        try {
+            POOL.submit(task).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            throw new IllegalStateException("Parallel update failed", e.getCause());
+        }
     }
 
     private void spreadFires() {
@@ -350,7 +365,6 @@ public class ForestFireSimulation {
                 }
 
                 for (Grid.Position neighbour : spreadPattern.getSpreadPositions(grid, row, column)) {
-
                     addHeat(neighbour.getRow(), neighbour.getColumn(), spreadHeat);
                 }
             } catch (IllegalArgumentException e) {
@@ -376,9 +390,10 @@ public class ForestFireSimulation {
     }
 
     private void evolveTerrain() {
-        grid.stream()
+        runInPool(() -> grid.stream()
+                .parallel()
                 .map(entry -> entry.getValue())
                 .filter(cell -> cell != null && !cell.isBurning() && cell.getTerrain() != null)
-                .forEach(cell -> cell.getTerrain().update());
+                .forEach(cell -> cell.getTerrain().update()));
     }
 }
