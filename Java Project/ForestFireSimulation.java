@@ -92,9 +92,7 @@ public class ForestFireSimulation {
     }
 
     private void notifyObservers(String message) {
-        for (SimulationObserver observer : observers) {
-            observer.onSimulationChanged(message);
-        }
+        observers.forEach(observer -> observer.onSimulationChanged(message));
     }
 
     public List<Firefighter> getFirefighters() {
@@ -113,9 +111,7 @@ public class ForestFireSimulation {
     }
 
     private void moveFirefighters() {
-        for (Firefighter firefighter : firefighters) {
-            firefighter.act(this);
-        }
+        firefighters.forEach(firefighter -> firefighter.act(this));
     }
 
     public void setSpreadPattern(SpreadPatternStrategy spreadPattern) {

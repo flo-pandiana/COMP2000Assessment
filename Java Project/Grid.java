@@ -1,10 +1,12 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -68,11 +70,7 @@ public class Grid<T> {
     }
 
     public void fill(T value) {
-        for (int row = 0; row < rows; row++) {
-            for (int column = 0; column < columns; column++) {
-                cells.get(row).set(column, value);
-            }
-        }
+        cells.forEach(currentRow -> Collections.fill(currentRow, value));
     }
 
     public boolean isInBounds(int row, int column) {
@@ -80,18 +78,10 @@ public class Grid<T> {
     }
 
     public List<T> neighbours(int row, int column) {
-        List<T> neighbourValues = new ArrayList<T>();
-
-        for (Position position : neighbourPositions(row, column)) {
-            T value = getCell(
-                position.getRow(),
-                position.getColumn()
-            );
-
-            neighbourValues.add(value);
-        }
-
-        return neighbourValues;
+        return neighbourPositions(row, column)
+                .stream()
+                .map(position -> getCell(position.getRow(), position.getColumn()))
+                .collect(Collectors.toList());
     }
 
     public List<Position> neighbourPositions(int row, int column) {

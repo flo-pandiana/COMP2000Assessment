@@ -82,7 +82,7 @@ public class PaintPanel extends JPanel implements SimulationObserver {
     }
 
     private void drawFirefighters(Graphics graphics) {
-        for (Firefighter firefighter : this.simulation.getFirefighters()) {
+        this.simulation.getFirefighters().forEach(firefighter -> {
             int x = firefighter.getColumn() * this.cellSize + 1;
             int y = firefighter.getRow() * this.cellSize + 1;
             int size = this.cellSize - 2;
@@ -92,7 +92,7 @@ public class PaintPanel extends JPanel implements SimulationObserver {
 
             graphics.setColor(Color.WHITE);
             graphics.drawOval(x, y, size, size);
-        }
+        });
     }
 
     private void drawGrid(Graphics graphics, Grid<Cell> grid) {
